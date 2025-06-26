@@ -1,0 +1,210 @@
+version: '3.8'
+
+networks: # Define a custom network
+  cogniflow_network:
+    driver: bridge
+
+services:
+  # The Frontend React App
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000" # Expose React's dev server port to your machine    volumes:
+      - ./frontend:/app # Mount code for live reloading
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:8000
+      - NO_DATABASE_MODE=false
+    stdin_open: true 
+    tty: true
+    depends_on:
+      - api-gateway
+    networks: # Add to the custom network
+      - cogniflow_network  # The API Gateway
+  api-gateway:
+    build: ./services/api-gateway
+    ports:
+      - "8000:8000" # Expose the gateway port
+    volumes:
+      - ./services/api-gateway:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      users-service:
+        condition: service_started 
+      courses-service:
+        condition: service_started
+      authentication-service:
+        condition: service_started
+      learning-analytics-service:
+        condition: service_started
+      notifications-service:
+        condition: service_started
+    environment:
+      - NODE_ENV=development
+      - NO_DATABASE_MODE=false 
+    networks: # Add to the custom network
+      - cogniflow_network
+  # Authentication Microservice
+  authentication-service:
+    build: ./services/authentication
+    ports:
+      - "8005:8005"
+    volumes:
+      - ./services/authentication:/code
+    environment:
+      - PYTHONPATH=/code
+      - DATABASE_URL=postgresql://cogniflow_user:cogniflow_dev_password@postgres:5432/cogniflow
+      - REDIS_URL=redis://redis:6379/2
+      - NO_DATABASE_MODE=false 
+      - JWT_SECRET_KEY=production-secret-key-from-env
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - cogniflow_network
+
+  # Users Microservice
+  users-service:
+    build: ./services/users-service
+    volumes:
+      - ./services/users-service:/code
+    environment:
+      - PYTHONPATH=/code
+      - DATABASE_URL=postgresql://cogniflow_user:cogniflow_dev_password@postgres:5432/cogniflow
+      - REDIS_URL=redis://redis:6379/0
+      - NO_DATABASE_MODE=false 
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks: # Add to the custom network
+      - cogniflow_network
+    # No external ports needed, the gateway will talk to it internally
+  # Courses Microservice  
+  courses-service:
+    build: ./services/courses-service
+    volumes:
+      - ./services/courses-service:/code
+    environment:
+      - PYTHONPATH=/code
+      - DATABASE_URL=postgresql://cogniflow_user:cogniflow_dev_password@postgres:5432/cogniflow
+      - REDIS_URL=redis://redis:6379/1
+      - NO_DATABASE_MODE=false 
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks: # Add to the custom network
+      - cogniflow_network
+    # No external ports needed, the gateway will talk to it internally
+
+  # Learning Analytics Microservice
+  learning-analytics-service:
+    build: ./services/learning-analytics
+    volumes:
+      - ./services/learning-analytics:/code
+    environment:
+      - PYTHONPATH=/code
+      - DATABASE_URL=postgresql://cogniflow_user:cogniflow_dev_password@postgres:5432/cogniflow
+      - REDIS_URL=redis://redis:6379/3
+      - NO_DATABASE_MODE=false
+      - USER_SERVICE_URL=http://users-service:8001
+      - COURSES_SERVICE_URL=http://courses-service:8002
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - cogniflow_network
+
+  # Notifications Microservice
+  notifications-service:
+    build: ./services/notifications-service
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./services/notifications-service:/code
+    environment:
+      - PYTHONPATH=/code
+      - DATABASE_URL=postgresql://cogniflow_user:cogniflow_dev_password@postgres:5432/cogniflow
+      - REDIS_URL=redis://redis:6379/4
+      - NO_DATABASE_MODE=false
+      - EMAIL_ENABLED=true
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - USER_SERVICE_URL=http://users-service:8001
+      - COURSES_SERVICE_URL=http://courses-service:8002
+      - ANALYTICS_SERVICE_URL=http://learning-analytics-service:8004
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - cogniflow_network
+
+  # AI Tutor Microservice
+  ai-tutor-service:
+    build: ./services/ai-tutor-service
+    ports:
+      - "8006:8006"
+    volumes:
+      - ./services/ai-tutor-service:/code
+    environment:
+      - PYTHONPATH=/code
+      - NO_DATABASE_MODE=false
+    depends_on:
+      - users-service
+      - courses-service
+      - learning-analytics-service
+    networks:
+      - cogniflow_network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=cogniflow
+      - POSTGRES_USER=cogniflow_user
+      - POSTGRES_PASSWORD=cogniflow_dev_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cogniflow_user -d cogniflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: # Add to the custom network
+      - cogniflow_network
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks: # Add to the custom network
+      - cogniflow_network
+
+volumes:
+  postgres_data:
+  redis_data:
