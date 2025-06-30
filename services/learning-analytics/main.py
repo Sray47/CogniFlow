@@ -811,6 +811,45 @@ async def record_learning_session(session_request: LearningSessionRequest):
         raise HTTPException(status_code=500, detail=f"Failed to record session: {str(e)}")
 
 
+# Simple Event Model for cross-service communication
+class SimpleEventRequest(BaseModel):
+    """Simplified event model for cross-service communication"""
+    user_id: str
+    event_type: str
+    event_data: Dict[str, Any] = {}
+    timestamp: str = datetime.datetime.now().isoformat()
+    service: str = "unknown"
+
+@app.post("/events/simple", summary="Record Simple Learning Event")
+async def record_simple_event(event: SimpleEventRequest):
+    """
+    Record a learning event with simplified format for cross-service communication
+    
+    This endpoint accepts events from other services in a simplified JSON format.
+    """
+    try:
+        # Convert to internal format and record
+        event_data = {
+            "user_id": event.user_id,
+            "event_type": event.event_type,
+            "event_data": event.event_data,
+            "timestamp": datetime.datetime.fromisoformat(event.timestamp.replace('Z', '+00:00')) if event.timestamp else datetime.datetime.now(),
+            "service": event.service
+        }
+        
+        analytics_store.record_event(event_data)
+        
+        return {
+            "status": "success",
+            "message": "Event recorded successfully",
+            "event_type": event.event_type
+        }
+        
+    except Exception as e:
+        logger.error(f"Error recording simple event: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to record event: {str(e)}")
+
+
 # Startup and shutdown event handlers
 @app.on_event("startup")
 async def startup_event():

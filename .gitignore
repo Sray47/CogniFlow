@@ -1,11 +1,14 @@
-# Dependencies
+*.bat
+*.ps1
+*.md
+!README.md
+*.sh
+*.txt
 node_modules/
 */node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,22 +30,27 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-# Environment variables
 .env
+.env.*
+*.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+config.prod.py
+secrets.py
+credentials.json
+*.key
+*.pem
+*.p12
+*.pfx
+.secrets/
 
-# IDEs and editors
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -50,52 +58,89 @@ MANIFEST
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Docker
 .dockerignore
-
-# Logs
 logs
 *.log
-
-# Runtime data
 pids
 *.pid
 *.seed
 *.pid.lock
-
-# Coverage directory used by tools like istanbul
 coverage/
-
-# nyc test coverage
 .nyc_output
-
-# Dependency directories
 jspm_packages/
-
-# Optional npm cache directory
 .npm
-
-# Optional REPL history
 .node_repl_history
-
-# Output of 'npm pack'
 *.tgz
-
-# Yarn Integrity file
 .yarn-integrity
-
-# React build output
 frontend/build/
-
-# Local database files
 *.db
 *.sqlite
 *.sqlite3
-
-# Temporary files
 tmp/
 temp/
-
-# Redis dump file
 dump.rdb
+*.production
+production.yml
+docker-compose.prod.yml
+k8s/
+kubernetes/
+terraform/
+.terraform/
+*.tfstate
+*.tfvars
+*api_key*
+*token*
+*secret*
+jwt_secret*
+auth_secret*
+database.prod.py
+db_config.prod.py
+*connection_string*
+schema_prod.sql
+.aws/
+.gcp/
+.azure/
+deployment/
+infra/
+*.pem
+*.p8
+*.mobileprovision
+*.personal
+.personal/
+TODO.personal.md
+NOTES.personal.md
+*.backup
+*.bak
+*~
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mkv
+*.iso
+*.dmg
+test_data/real_*
+fixtures/production_*
+*_real_data*
+*.personal
+.personal/
+TODO.personal.md
+NOTES.personal.md
+PRIVATE_*
+*_PRIVATE*
+
+user_data/
+real_users.json
+production_data/
+*.sql.backup
+data_export/
+.github/secrets/
+.gitlab-ci-secrets/
+deployment-secrets/
+helm/secrets/
+ansible/vault/
+.vscode/settings.json
+.idea/workspace.xml
+*.code-workspace

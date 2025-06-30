@@ -325,7 +325,33 @@ We welcome contributions! Please follow these steps:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## � Security Notice
+
+⚠️ **Important**: This is a **demonstration/educational project**. Before deploying to production:
+
+1. **Review [SECURITY.md](SECURITY.md)** for comprehensive security guidelines
+2. **Never commit `.env` files** - use `.env.example` as a template
+3. **Generate strong secrets** for JWT tokens and database passwords
+4. **Enable HTTPS/TLS** for all communications in production
+5. **Implement proper authentication** and input validation
+
+For production deployment, conduct a thorough security review and implement additional security measures.
+
+## 🤝 Contributing
+
+We welcome contributions! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the security guidelines in [SECURITY.md](SECURITY.md)
+4. Test your changes thoroughly
+5. Submit a pull request
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## �🙏 Acknowledgments
 
 - **FastAPI**: For the amazing Python web framework
 - **React**: For the powerful frontend library

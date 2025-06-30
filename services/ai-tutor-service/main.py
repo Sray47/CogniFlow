@@ -583,6 +583,33 @@ async def get_user_analytics_summary(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get analytics summary: {str(e)}")
 
+@app.get("/dashboard/{user_id}")
+async def get_user_dashboard(user_id: str):
+    """Get comprehensive user dashboard with all learning metrics"""
+    try:
+        dashboard_data = {
+            "user_id": user_id,
+            "points": store.get_user_points(user_id),
+            "badges": store.get_user_badges(user_id),
+            "spaced_repetition": {
+                "due_today": len([item for item in store.get_spaced_repetition_schedule(user_id) 
+                                if item.get("next_review_date", "").startswith(datetime.datetime.now().strftime("%Y-%m-%d"))]),
+                "total_items": len(store.get_spaced_repetition_schedule(user_id)),
+                "schedule": store.get_spaced_repetition_schedule(user_id)[:5]  # Next 5 items
+            },
+            "learning_stats": store.get_user_learning_stats(user_id),
+            "recent_activity": store.get_chat_history(user_id)[-5:],  # Last 5 interactions
+            "recommendations": store.get_adaptive_content_recommendations(user_id)
+        }
+        
+        return {
+            "status": "success",
+            "data": dashboard_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get dashboard: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

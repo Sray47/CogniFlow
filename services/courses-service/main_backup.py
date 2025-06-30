@@ -1,3 +1,4 @@
+# services/courses-service/main.py
 """
 CogniFlow Courses Service
 
@@ -123,7 +124,7 @@ async def fire_analytics_event(event_type: str, user_id: str, metadata: dict):
             "timestamp": datetime.datetime.now().isoformat(),
             "service": "courses"
         }
-        # Try to send to analytics service, fallback to logging
+          # Try to send to analytics service, fallback to logging
         try:
             import httpx
             async with httpx.AsyncClient() as client:
@@ -359,3 +360,4 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8003)
+```

@@ -5,25 +5,26 @@ networks: # Define a custom network
     driver: bridge
 
 services:
-  # The Frontend React App
-  frontend:
+  # The Frontend React App  frontend:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000" # Expose React's dev server port to your machine    volumes:
+      - "3000:3000" # Expose React's dev server port to your machine
+    volumes:
       - ./frontend:/app # Mount code for live reloading
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
       - REACT_APP_API_URL=http://localhost:8000
-      - NO_DATABASE_MODE=false
-    stdin_open: true 
+      - NO_DATABASE_MODE=false    stdin_open: true 
     tty: true
     depends_on:
       - api-gateway
     networks: # Add to the custom network
-      - cogniflow_network  # The API Gateway
+      - cogniflow_network
+
+  # The API Gateway
   api-gateway:
     build: ./services/api-gateway
     ports:
@@ -44,9 +45,9 @@ services:
         condition: service_started
     environment:
       - NODE_ENV=development
-      - NO_DATABASE_MODE=false 
-    networks: # Add to the custom network
+      - NO_DATABASE_MODE=false    networks: # Add to the custom network
       - cogniflow_network
+
   # Authentication Microservice
   authentication-service:
     build: ./services/authentication
@@ -88,6 +89,7 @@ services:
     networks: # Add to the custom network
       - cogniflow_network
     # No external ports needed, the gateway will talk to it internally
+
   # Courses Microservice  
   courses-service:
     build: ./services/courses-service

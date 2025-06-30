@@ -1,1 +1,0 @@
-okay it is working now. can you start building this platform further, keeping this no db mode only, and keeping production ready alternative code in the same file as comments. I want professional code with professional and standard comments, do  not use emojis and poor language, explain the code and the production ready code in the comments itself
